@@ -49,20 +49,25 @@ namespace GeoSkylines
 
         public void LoadConfiguration()
         {
-            if (!File.Exists("Files/import_export.conf"))
+            string impExPath = Path.GetFullPath("Files/import_export.conf");
+
+            if (!File.Exists(impExPath))
             {
                 panel.SetMessage("GeoSkylines", "No configuration file provided!", false);
                 confloaded = false;
             }
 
-            StreamReader confSr = File.OpenText("Files/import_export.conf");
+            
             Dictionary<string, string> conf = new Dictionary<string, string>();
-            while (!confSr.EndOfStream)
-            {
-                string[] keyVal = confSr.ReadLine().Split(':');
-                if (keyVal.Length == 2)
-                    conf.Add(keyVal[0], keyVal[1]);
+            using(StreamReader confSr = File.OpenText(impExPath)){
+                while (!confSr.EndOfStream)
+                {
+                    string[] keyVal = confSr.ReadLine().Split(':');
+                    if (keyVal.Length == 2)
+                        conf.Add(keyVal[0], keyVal[1]);
+                }
             }
+            
 
             foreach (KeyValuePair<string, string> a_conf in conf)
             {
@@ -172,8 +177,10 @@ namespace GeoSkylines
 
                 txtLines.Add(ExportBuilding(a_bldg, ref properties));
             }
-            
-            StreamWriter outputFile = new StreamWriter("Files/buildings_cs.csv", false, new UTF8Encoding(true));
+
+            string outputFilePath = Path.GetFullPath("Files/buildings_cs.csv");
+
+            StreamWriter outputFile = new StreamWriter(outputFilePath, false, new UTF8Encoding(true));
             foreach (var lineTxt in txtLines)
             {
                 outputFile.WriteLine(lineTxt);
@@ -273,7 +280,8 @@ namespace GeoSkylines
                     txtLines.Add(ExportSegment(a_seg, ref i, ref properties));
             }
 
-            StreamWriter outputFile = new StreamWriter("Files/roads_cs.csv", false, new UTF8Encoding(true));
+            string outputRoadsPath = Path.GetFullPath("Files/roads_cs.csv");
+            StreamWriter outputFile = new StreamWriter(outputRoadsPath, false, new UTF8Encoding(true));
             foreach (var lineTxt in txtLines)
             {
                 outputFile.WriteLine(lineTxt);
@@ -282,7 +290,8 @@ namespace GeoSkylines
 
             if (txtLinesRail.Count > 1)
             {
-                StreamWriter outputFileRail = new StreamWriter("Files/rails_cs.csv", false, new UTF8Encoding(true));
+                string outputRailsPath = Path.GetFullPath("Files/rails_cs.csv");
+                StreamWriter outputFileRail = new StreamWriter(outputRailsPath, false, new UTF8Encoding(true));
                 foreach (var lineTxt in txtLinesRail)
                 {
                     outputFileRail.WriteLine(lineTxt);
@@ -442,7 +451,8 @@ namespace GeoSkylines
                 txtLines.Add(rowTxt);
             }
 
-            StreamWriter outputFile = new StreamWriter("Files/zones_cs.csv", false, new UTF8Encoding(true));
+            string outputFilePath = Path.GetFullPath("Files/zones_cs.csv");
+            StreamWriter outputFile = new StreamWriter(outputFilePath, false, new UTF8Encoding(true));
             foreach (var lineTxt in txtLines)
             {
                 outputFile.WriteLine(lineTxt);
@@ -584,19 +594,21 @@ namespace GeoSkylines
             ExceptionPanel panel = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
             string msg = "";
 
-            if (!File.Exists("Files/import_export.conf"))
+            string confFilePath = Path.GetFullPath("Files/import_export.conf");
+
+            if (!File.Exists(confFilePath))
             {
                 panel.SetMessage("Jan's mod", "no conf file provided!", false);
                 return;
             }
 
-            StreamReader confSr = File.OpenText("Files/import_export.conf");
             Dictionary<string, string> conf = new Dictionary<string, string>();
-            while (!confSr.EndOfStream)
-            {
-                string[] keyVal = confSr.ReadLine().Split(':');
-                if (keyVal.Length == 2)
-                    conf.Add(keyVal[0], keyVal[1]);
+            using (StreamReader confSr = File.OpenText(confFilePath)) {
+                while (!confSr.EndOfStream) {
+                    string[] keyVal = confSr.ReadLine().Split(':');
+                    if (keyVal.Length == 2)
+                        conf.Add(keyVal[0], keyVal[1]);
+                }
             }
 
             double centerLat = double.Parse(conf["CenterLatitude"]);
@@ -805,8 +817,10 @@ namespace GeoSkylines
 
         static public void DisplayLLOnMouseClick()
         {
+            string impExPath = Path.GetFullPath("Files/import_export.conf");
+
             ExceptionPanel panel = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
-            if (!File.Exists("Files/import_export.conf"))
+            if (!File.Exists(impExPath))
             {
                 panel.SetMessage("GeoSkylines", "no conf file provided!", false);
                 return;
@@ -817,13 +831,13 @@ namespace GeoSkylines
             Ray mouseRay = Camera.main.ScreenPointToRay(screenMousePos);
             var mousePos = GeoSkylinesTool.RaycastMouseLocation(mouseRay);            
 
-            StreamReader confSr = File.OpenText("Files/import_export.conf");
             Dictionary<string, string> conf = new Dictionary<string, string>();
-            while (!confSr.EndOfStream)
-            {
-                string[] keyVal = confSr.ReadLine().Split(':');
-                if (keyVal.Length == 2)
-                    conf.Add(keyVal[0], keyVal[1]);
+            using (StreamReader confSr = File.OpenText(impExPath)) {
+                while (!confSr.EndOfStream) {
+                    string[] keyVal = confSr.ReadLine().Split(':');
+                    if (keyVal.Length == 2)
+                        conf.Add(keyVal[0], keyVal[1]);
+                }
             }
 
             double centerLat = double.Parse(conf["CenterLatitude"]);
@@ -901,12 +915,12 @@ namespace GeoSkylines
                 txtLines.Add(rowTxt);
             }
 
-            StreamWriter outputFile = new StreamWriter("Files/trees_cs.csv", false, new UTF8Encoding(true));
-            foreach (var lineTxt in txtLines)
-            {
-                outputFile.WriteLine(lineTxt);
+            string outputFilePath = Path.GetFullPath("Files/trees_cs.csv");
+            using (StreamWriter outputFile = new StreamWriter(outputFilePath, false, new UTF8Encoding(true))) {
+                foreach (var lineTxt in txtLines) {
+                    outputFile.WriteLine(lineTxt);
+                }
             }
-            outputFile.Close();
 
             panel.SetMessage("GeoSkylines", "Trees export completed. ", false);
         }

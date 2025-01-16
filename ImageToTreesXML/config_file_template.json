@@ -1,0 +1,13 @@
+{
+  "trees_png_path": "C:/Users/user/Pictures/Forest.png",
+  "colors_to_id": [
+    {
+      "color": "#f3fc1d",
+      "id": 1
+    },
+    {
+      "color": "#e4cf03",
+      "id": 2
+    }
+  ]
+}

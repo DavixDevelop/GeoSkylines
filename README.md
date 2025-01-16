@@ -36,6 +36,9 @@ There is a GeoSkylines method for creating tree coverage from raster image (tree
 # Prepare tree vector layer
 Alternatively, tree coverage can be created from vector data as well. To prepare the file trees_rwo.csv, follow the steps described in the Word document.  
 
+# TreesXML
+Another way the coverage can be created is using the TreesXML file (trees.xml). The file can be generated from a raster of a much higher resolution then 1081x1081 with a simple console app - ImageToTreesXML. It can also be generated from vector data which specifies the composition of the forest in percentages, using the Python script VectorToTreesXML.py for QGIS. Both procedures are described in the Word document. 
+
 # Import methods of GeoSkylines mod
 GeoSkylinesImport.ImportRoads():
 - Run by hotkey combo: right Ctrl + R
@@ -61,13 +64,18 @@ GeoSkylinesImport.ImportWaterWay():
 
 GeoSkylinesImport.ImportTreesRaster():
 - Run by hotkey combo: right Ctrl + T
-- Requires: trees.png (1081 x 1081 resolution), import_export.txt
+- Requires: trees.png (max 16384x16384 resolution, but preferably much much lower), import_export.txt
 - Description: loops over every pixel and for every non-white pixel it creates a tree. If variable ImportTreesRasterMultiply is defined, method adjust the number of trees created (see more details below). Method adds randomness into the position of the created trees. 
 
 GeoSkylinesImport.ImportTreesVector():
 - Run by hotkey combo: right Ctrl + V
 - Requires: trees_rwo.csv, import_export.txt
 - Description: loops over all trees in trees_rwo.csv and creates a tree.
+
+GeoSkylinesImport.ImportTreesXML():
+- Run by hotkey combo: right Ctrl + X
+- Requires: trees.xml, import_export.txt
+- Description: Loop over the tree positions in trees.xml, and depending on the mode (vector|raster) places the tree directly, or places a single (can be increased using ImportTreesXmlMultiply) tree randomly within the "pixel" position. The benefit of this method, above the higher resolution tree coverage, is that the tree positions can be categorized into compositions (type of trees, ex. oak), with each composition having one or more tree (TreeInfo) prefabs (ImportTreesXmlTreeTypes)
 
 GeoSkylinesImport.ImportZonesArea():
 - Run by hotkey combo: right Ctrl + Z
@@ -119,7 +127,7 @@ GeoSkylinesExport.OutputPrefabInfo():
 - Note: this is valuable for creating the match CSV files and setting some variables in import_export.txt
 
 # Configuration of import and export methods
-CSV files for import, CSV files for matching types of objects, trees.png file and import_export.txt file have to be stored in folder: c:\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Files\. This folder is also used to store CSV files to output game objects as GIS data using the export methods (e.g. roads_cs.csv). 
+CSV files for import, CSV files for matching types of objects, trees.png file, trees.xml and import_export.txt file have to be stored in folder: c:\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Files\. This folder is also used to store CSV files to output game objects as GIS data using the export methods (e.g. roads_cs.csv). 
 
 File import_export.txt lists parameters for configurying the import and export methods. Here's the complete list of parameters. 
 
@@ -147,10 +155,6 @@ ImportBuildingsCoordMax:
 - Description: Specifies the max coord (in both directions - positive and negative) for creating game objects. Game area is 17280 x 17280, thus axes x a z range from -8640 to 8640. This represents 9x9 tiles. If no value is defined, then the absolute 8640 will be used. 
 - Example: 4800 (this represents the area of 5x5 tiles, game objects won't be created past this)
 
-ImportTreesRasterOffTolerance:
-- Description: Sometimes the created map image is not exactly 1081 x 1081 but instead few pixels off (but still close enough). In this case you can specify the number of pixels the map image is off. The code will work only with map images that are within range (1081 - ImportTreesRasterOffTolerance) to (1081 + ImportTreesRasterOffTolerance). 
-- Example: 1
-
 ImportTreesRasterOffsetX & ImportTreesRasterOffsetY: 
 - Description: If the tree map image (and the game trees generated based on the map image) doesn't align with other layers (roads, water basins) then it's possible to use ImportTreesRasterOffsetX & ImportTreesRasterOffsetY to move it around and align it with other layers. 
 - Example: 100 (metres)
@@ -168,6 +172,27 @@ ImportTreesCoordMax:
 - Description: Specifies the max coord (in both directions - positive and negative) for creating game objects. Game area is 17280 x 17280, thus axes x a z range from -8640 to 8640. This represents 9x9 tiles. If no value is defined, then the absolute 8640 will be used. 
 - Example: 8640 (this represents the area of 9x9 tiles, game objects won't be created past this)
 - Note: lower the max coord if you need to lower the total number of trees if reaching the tree limit is a problem. 
+
+ImportTreesRasterTreesLimit:
+- Description: If you use a mod that increases the tree limit, ex: Tree Control 1.0, specify the limit here
+- Example: 2000000
+
+ImportTreesXmlOffsetX & ImportTreesXmlOffsetY: 
+- Description: If the treesXML file (and the game trees generated based on the treesXML file) doesn't align with other layers (roads, water basins) then it's possible to use ImportTreesXmlOffsetX & ImportTreesXmlOffsetY to move it around and align it with other layers. 
+- Example: 100 (metres)
+
+ImportTreesXmlMultiply: 
+- Description: To make tree coverage denser or less dense, when the provided trees.xml was generated using raster data (e.g. to avoid reaching the game limit 250 000 or the limit specified in ImportTreesXmlTreesLimit, of trees created), you can use parameter ImportTreesXmlMultiply. The number specifies a step at which tree creation will be skipped (if number is negative) or an additional tree will be created (if number is positive). 
+- Example A: -2 (every second tree creation will be skipped, i.e. the total number of trees will be divided by 2)
+- Example B: 1 (at every tree creation, new additional tree will be created, i.e. multiplying the number of tree by 2). 
+
+ImportTreesXmlTreeTypes: 
+- Description: For adding diversity in the tree creation process. List of composition ID and their TreeInfo IDs (you can use the helper method GeoSkylinesExport.OutputPrefabInfo() to list IDs of all TreeInfo (prefab) instances). For each tree creation, depending on the composition ID from the provided list, one TreeInfo is randomly selected from the composition sub-list.
+- Example: [1{0}],[2{1|6}] (Each composition is defined with []. Let's take [1{0}] for example. The first number indicates the ID of the composition (or attribute if trees.xml was generated from vector data). IDs of TreeInfo instances are defined withing {}, in this case 0, so if a tree position is of composition ID 1, the TreeInfo of an ID 0 will always be selected, but if the composition ID is 2, then either a TreeInfo of ID 1 or 6 will be selected)
+
+ImportTreesXmlTreesLimit:
+- Description: If you use a mod that increases the tree limit, ex: Tree Control 1.0, specify the limit here
+- Example: 2000000
 
 ImportWaterWayTypes: 
 - Description: List of waterway types that the code will work with. Any other water way type will be ignored. 

@@ -169,6 +169,22 @@ namespace GeoSkylines
                 _processed = false;
             }
 
+            // import tree from trees xml
+            if(Input.GetKey(KeyCode.RightControl) && Input.GetKey(KeyCode.X)) {
+                if (_processed) return;
+
+                _processed = true;
+
+                GeoSkylinesImport imp = new GeoSkylinesImport();
+                string msg = "Parameters: \n";
+                msg += imp.OutputConfiguration("tree3");
+                ConfirmPanel.ShowModal("GeoSkylines: Import trees (xml)", msg, (s, r) => {
+                    if (r != 1)
+                        return;
+                    imp.ImportTreesXML();
+                });
+            }
+
             // import trees from raster
             if (Input.GetKey(KeyCode.RightControl) && Input.GetKey(KeyCode.T))
             {
